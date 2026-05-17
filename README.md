@@ -40,190 +40,106 @@ pnpm add @paratco/async-modal
 ### 1. Usage Container modal
 
   1. create `MyModal` Component by `AsyncModalProps` Type
+  - this sample has data:
 
-    - this sample has data:
+  ```tsx
+  import type { AsyncModalProps } from "@paratco/async-modal";
+  import type { ReactElement } from "react";
 
-      ```tsx
-      import type { AsyncModalProps } from "@paratco/async-modal";
-      import type { ReactElement } from "react";
+  export interface DataProps {
+    value: string;
+  }
 
-      export interface DataProps {
-        value: string;
+  export default function MyModal({ dismissible, isVisible, onClose, data }:
+  AsyncModalProps<boolean, DataProps>): ReactElement {
+    const handleClose = (): void => {
+      if (dismissible) {
+        onClose(false);
       }
+    };
 
-      export default function MyModal({ dismissible, isVisible, onClose, data }:
-      AsyncModalProps<boolean, DataProps>): ReactElement {
-        const handleClose = (): void => {
-          if (dismissible) {
-            onClose(false);
+    const handleConfirm = (): void => {
+      onClose(false);
+    };
+
+    return (
+      <ModalCustom isOpen={isVisible} onClose={handleClose}>
+        <p>
+          This is Container Modal
+          {
+            data?.value
           }
-        };
+        </p>
 
-        const handleConfirm = (): void => {
-          onClose(false);
-        };
-
-        return (
-          <ModalCustom isOpen={isVisible} onClose={handleClose}>
-            <p>
-              This is Container Modal
-              {
-                data?.value
-              }
-            </p>
-
-            <button type="button" onClick={handleClose}>
-              <p>
-                Cancel
-              </p>
-            </button>
-            <button type="button" onClick={handleConfirm}>
-              <p>
-                Confirm
-              </p>
-            </button>
-          </ModalCustom>
-        );
-      }
-      ```
+        <button type="button" onClick={handleClose}>
+          <p>
+            Cancel
+          </p>
+        </button>
+        <button type="button" onClick={handleConfirm}>
+          <p>
+            Confirm
+          </p>
+        </button>
+      </ModalCustom>
+    );
+  }
+  ```
 
 
   2. import `modal` from @paratco/async-modal in my Component that we want show Container modal in it.
 
-    import { modal } from "@paratco/async-modal";
+  ```tsx
+  import { modal } from "@paratco/async-modal";
+  ```
 
   3. set handle showMyModal Function:
-    - we use `modal.add()` for showing our modal
+  - we use `modal.add()` for showing our modal
 
-    ```tsx
-    const showMyModal = async (): Promise<void> => {
-      const result = await modal.add(
-        MyModal
-      , {
-        data: {
-          value: "this value is data this modal"
-        },
-        dismissible: true
-      });
+  ```tsx
+  const showMyModal = async (): Promise<void> => {
+    const result = await modal.add(
+      MyModal
+    , {
+      data: {
+        value: "this value is data this modal"
+      },
+      dismissible: true
+    });
 
-      console.log(`Container Modal result: ${result}`);
-    };
-    ```
+    console.log(`Container Modal result: ${result}`);
+  };
+  ```
 
   4. using from `ModalContainer` in our return Component:
 
-    ```tsx
-    <ModalContainer />
-    <Button
-      variant="text"
-      onClick={() => {
-        void showMyModal();
-      }}
-    >
-      Show Modal Container
-    </Button>
-    ```
+  ```tsx
+  <ModalContainer />
+  <Button
+    variant="text"
+    onClick={() => {
+      void showMyModal();
+    }}
+  >
+    Show Modal Container
+  </Button>
+  ```
 
 ### 2. Usage Provider Modal:
   1. set up the `ModalProvider`:
 
-    ```tsx
-    import { ModalProvider } from "@paratco/async-modal";
+  ```tsx
+  import { ModalProvider } from "@paratco/async-modal";
 
-    function App() {
-      return <AsyncModalProvider>{/* Rest of your app */}</AsyncModalProvider>;
-    }
-    ```
+  function App() {
+    return <AsyncModalProvider>{/* Rest of your app */}</AsyncModalProvider>;
+  }
+  ```
 
   2. Create MyModal Component:
 
-    - in this sample we have any data:
-    - and for the type of our modalComponent we use from `AsyncModalProps`:
-
-      ```tsx
-      import type { AsyncModalProps } from "@paratco/async-modal";
-      import type { ReactElement } from "react";
-
-      export function MyModal({ dismissible, isVisible, onClose }:
-      AsyncModalProps<boolean, null>): ReactElement {
-        const handleClose = (): void => {
-          if (dismissible) {
-            onClose(false);
-          }
-        };
-
-        const handleConfirm = (): void => {
-          onClose(false);
-        };
-
-        return (
-          <ModalCustom
-            isOpen={isVisible}
-            onClose={handleClose}
-          >
-            <div>
-              <p>
-                this is Provider Modal
-              </p>
-
-              <button type="button" onClick={handleClose}>
-                <p>
-                  Cancel
-                </p>
-              </button>
-              <button type="button" onClick={handleConfirm}>
-                <p>
-                  Confirm
-                </p>
-              </button>
-            </div>
-          </ModalCustom>
-        );
-      }
-      ```
-
-  3. using from `useProviderModal` Hook for show My modal:
-    import { useProviderModal } from "@paratco/async-modal";
-
-    const { show } = useProviderModal();
-
-  4. create `functionShow` and `button`:
-
-    ```tsx
-    const showMyModal = async (): Promise<void> => {
-      const result = await show(
-        MyModal
-        , {
-          dismissible: true
-        }
-      );
-
-      console.log(`Provider Modal result: ${result}`);
-    };
-
-    <button
-      type="button"
-      onClick={() => {
-        void showMyModal();
-      }}
-    >
-      Show Provider Modal
-    </button>
-    ```
-
-### 3. Usage Imperative Modal:
-
-  - in this Modal type, we use from `Ref`.
-  - type of this Ref is `ImperativeModalApi` that it's coming from `@paratco/async-modal`.
-
-    import type { ImperativeModalApi } from "@paratco/async-modal";
-
-    ```tsx
-    const imperativeRef = useRef<ImperativeModalApi<Response, DataModal | null>>(null);
-    ```
-
-  1. create `MyModal` Component:
-    - in this sample we have any data:
+  - in this sample we have any data:
+  - and for the type of our modalComponent we use from `AsyncModalProps`:
 
     ```tsx
     import type { AsyncModalProps } from "@paratco/async-modal";
@@ -231,7 +147,6 @@ pnpm add @paratco/async-modal
 
     export function MyModal({ dismissible, isVisible, onClose }:
     AsyncModalProps<boolean, null>): ReactElement {
-      
       const handleClose = (): void => {
         if (dismissible) {
           onClose(false);
@@ -249,7 +164,7 @@ pnpm add @paratco/async-modal
         >
           <div>
             <p>
-              this is Imperative Modal
+              this is Provider Modal
             </p>
 
             <button type="button" onClick={handleClose}>
@@ -268,43 +183,133 @@ pnpm add @paratco/async-modal
     }
     ```
 
+  3. using from `useProviderModal` Hook for show My modal:
+    import { useProviderModal } from "@paratco/async-modal";
+
+  ```tsx
+  const { show } = useProviderModal();
+  ```
+
+  4. create `functionShow` and `button`:
+
+  ```tsx
+  const showMyModal = async (): Promise<void> => {
+    const result = await show(
+      MyModal
+      , {
+        dismissible: true
+      }
+    );
+
+    console.log(`Provider Modal result: ${result}`);
+  };
+
+  <button
+    type="button"
+    onClick={() => {
+      void showMyModal();
+    }}
+  >
+    Show Provider Modal
+  </button>
+  ```
+
+### 3. Usage Imperative Modal:
+
+- in this Modal type, we use from `Ref`.
+- type of this Ref is `ImperativeModalApi` that it's coming from `@paratco/async-modal`.
+
+```tsx
+import type { ImperativeModalApi } from "@paratco/async-modal";
+
+const imperativeRef = useRef<ImperativeModalApi<Response, DataModal | null>>(null);
+```
+
+  1. create `MyModal` Component:
+  - in this sample we have any data:
+
+  ```tsx
+  import type { AsyncModalProps } from "@paratco/async-modal";
+  import type { ReactElement } from "react";
+
+  export function MyModal({ dismissible, isVisible, onClose }:
+  AsyncModalProps<boolean, null>): ReactElement {
+    
+    const handleClose = (): void => {
+      if (dismissible) {
+        onClose(false);
+      }
+    };
+
+    const handleConfirm = (): void => {
+      onClose(false);
+    };
+
+    return (
+      <ModalCustom
+        isOpen={isVisible}
+        onClose={handleClose}
+      >
+        <div>
+          <p>
+            this is Imperative Modal
+          </p>
+
+          <button type="button" onClick={handleClose}>
+            <p>
+              Cancel
+            </p>
+          </button>
+          <button type="button" onClick={handleConfirm}>
+            <p>
+              Confirm
+            </p>
+          </button>
+        </div>
+      </ModalCustom>
+    );
+  }
+  ```
+
   2. Create `Ref` of Imperative modal for showing:
 
-    import { useRef } from "react";
-    import type { ImperativeModalApi } from "@paratco/async-modal";
+  ```tsx
+  import { useRef } from "react";
+  import type { ImperativeModalApi } from "@paratco/async-modal";
 
-    ```tsx
-    const imperativeRef = useRef<ImperativeModalApi<boolean, null>>(null);
-    ```
+  const imperativeRef = useRef<ImperativeModalApi<boolean, null>>(null);
+  ```
 
   3. set Function `showMyModal`:
 
-    const showMyModal = async (): Promise<void> => {
-      const result = await imperativeRef.current?.api.show();
+  ```tsx
+  const showMyModal = async (): Promise<void> => {
+    const result = await imperativeRef.current?.api.show();
 
-      console.log(`Imperative Modal result: ${result}`);
-    };
+    console.log(`Imperative Modal result: ${result}`);
+  };
+  ```
 
   4. in finally:
 
-    - we use `ImperativeModal` from `@paratco/async-modal`:
-    - and create a button for showing my modal:
+  - we use `ImperativeModal` from `@paratco/async-modal`:
+  - and create a button for showing my modal:
 
-    ```tsx
-    <button
-      type="button"
-      onClick={() => {
-        void showMyModal();
-      }}
-    >
-      Show Modal Imperative
-    </button>
-    <ImperativeModal
-      Modal={MyModal}
-      dismissible={true}
-      ref={imperativeRef}
-    />
-    ```
+  ```tsx
+  <button
+    type="button"
+    onClick={() => {
+      void showMyModal();
+    }}
+  >
+    Show Modal Imperative
+  </button>
+  <ImperativeModal
+    Modal={MyModal}
+    dismissible={true}
+    ref={imperativeRef}
+  />
+  ```
 
 
 ## Advanced Usage
