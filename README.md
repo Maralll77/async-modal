@@ -1,296 +1,601 @@
 # React Async Modal
 
-This repository contains a custom React hook (useAsyncModal) and a modal context provider (AsyncModalProvider) for handling asynchronous modal dialogs in your React application.
+A lightweight, type-safe, promise-based modal system for React.
 
-## Table of Contents
+This package provides three different modal patterns:
+
+- `modal.add()` → Global modal system
+- `ModalProvider` → Context-based modal system
+- `ImperativeModal` → Ref-based modal system
+
+Built with:
+
+- React Hooks
+- TypeScript
+- Async/Await API
+- `useSyncExternalStore`
+- Zero dependencies
+
+---
+
+# Table of Contents
 
 - [Features](#features)
 - [Installation](#installation)
-- [Usage](#usage)
-- [Advanced Usage](#advanced-usage)
-- [Example With MUI Library](#example-with-mui-library)
+- [Basic Modal Type](#basic-modal-type)
+- [Create a Modal](#create-a-modal)
+- [1. Usage Container Modal](#1-usage-container-modal)
+- [2. Usage Provider Modal](#2-usage-provider-modal)
+- [3. Usage Imperative Modal](#3-usage-imperative-modal)
+- [Modal Options](#modal-options)
+- [Animation Support](#animation-support)
+- [How It Works](#how-it-works)
+- [Architecture Comparison](#architecture-comparison)
+- [Best Practices](#best-practices)
+- [Example With MUI](#example-with-mui)
+- [License](#license)
+
+---
+
 
 ## Features
 
-- Async Modals: The showModal method returns a Promise that resolves when the modal is closed.
-- Dynamic Data Passing: You can pass dynamic data to the modal and handle it in your component.
-- Dismissible Modals: You can make modals dismissible or non-dismissible.
-- Fully Typed: Typescript support is included to ensure type safety for modal props and returned values.
+- Promise-based modal API
+- Fully typed modal data and responses
+- Multiple modal architectures
+- Animation support with `outDelay`
+- Lightweight and reusable
+- No reducers
+- No external state library
+- React 18 compatible
+- TypeScript support
+- Async/Await modal handling
 
-## Installation
+---
 
-To install, you can use npm or yarn or pnpm:
+# Installation
 
-```js
+Install with npm:
+
+```bash
 npm install @paratco/async-modal
+```
 
+Install with yarn:
+
+```bash
 yarn add @paratco/async-modal
+```
 
+Install with pnpm:
+
+```bash
 pnpm add @paratco/async-modal
 ```
 
-## Usage
+Install with bun:
 
-1. Set up the `AsyncModalProvider`
-
-   Wrap your application (or a part of it where you need modal functionality) with the `AsyncModalProvider`:
-
-   ```tsx
-   import { AsyncModalProvider } from "@paratco/async-modal";
-
-   function App() {
-     return <AsyncModalProvider>{/* Rest of your app */}</AsyncModalProvider>;
-   }
-   ```
-
-2. Create a Modal Component
-
-   Create a modal component that conforms to the `AsyncModalProps` interface:
-
-   - The modal may or may not include `data` props.
-
-     Example with `data`
-
-     ```tsx
-     import { AsyncModalProps, AsyncModalPropsBase } from "@paratco/async-modal";
-
-     interface Data extends AsyncModalPropsBase {
-       message: string;
-     }
-
-     export default function MyModal({ onClose, dismissible, data }): AsyncModalProps<boolean, Data> {
-       // You can destructure data or not
-       const { message } = data;
-
-       function handleClose() {
-         if (dismissible) {
-           onClose();
-         }
-       }
-
-       function handleConfirm(){
-        console.log("Confirm");
-
-        onClose(true);
-       }
-
-       return (
-         <div className="modal">
-           <!-- if don`t destructure data use like this: <p>{data?.message}</p> -->
-           <p>{message}</p>
-           <button onClick={() => handleConfirm()}>Confirm</button>
-           <button onClick={() => handleClose()}>Cancel</button>
-         </div>
-       );
-     }
-
-     export default MyModal;
-     ```
-
-     - `AsyncModalProps<boolean, Data>` is a return type
-
-     Example without `data`
-
-     ```tsx
-     import { AsyncModalProps } from "@paratco/async-modal";
-
-     export default function MyModal({ onClose, dismissible }): AsyncModalProps<boolean> {
-       function handleClose() {
-         if (dismissible) {
-           onClose();
-         }
-       }
-
-       return (
-         <div className="modal">
-           <p>Are you sure?</p>
-           <button onClick={() => console.log("Confirm")}>Confirm</button>
-           <button onClick={() => handleClose()}>Cancel</button>
-         </div>
-       );
-     }
-
-     export default MyModal;
-     ```
-
-3. Use the `useAsyncModal` Hook
-
-   In any component where you need to show a modal, use the `useAsyncModal` hook to access the `showModal` method:
-
-   Example with `data`
-
-   ```tsx
-   import { useAsyncModal } from "@paratco/async-modal";
-   import MyModal from './components/MyModal';
-
-   export default ExampleComponent () {
-     const { showModal } = useAsyncModal();
-
-     const handleShowModal = async () => {
-       const result = await showModal({
-         modal: MyModal,
-         data: { message: "Are you sure you want to proceed?" },
-         dismissible: true
-       });
-
-       if (result) {
-         console.log("User confirmed");
-       } else {
-         console.log("User canceled");
-       }
-     };
-
-     return (
-       <div>
-         <button onClick={handleShowModal}>Open Modal</button>
-       </div>
-     );
-   };
-   ```
-
-   Example without `data`
-
-   ```tsx
-    import { useAsyncModal } from "@paratco/async-modal";
-    import MyModal from './components/MyModal';
-
-    export default ExampleComponent () {
-     const { showModal } = useAsyncModal();
-
-     const handleShowModal = async () => {
-       const result = await showModal({
-         modal: MyModal,
-         dismissible: true
-       });
-
-       if (result) {
-         console.log("User confirmed");
-       } else {
-         console.log("User canceled");
-       }
-     };
-
-     return (
-       <div>
-         <button onClick={handleShowModal}>Open Modal</button>
-       </div>
-     );
-   };
-   ```
-
-4. Modal Context Configuration
-
-- `showModal(params)`: Displays the modal. The params object should include:
-  - `modal`: The component to render as the modal.
-  - `data`: Optional. Any data to pass into the modal.just define types.
-  - `dismissible`: Optional. If set to `false`, the modal cannot be dismissed without user action.
-- Modal Component: The modal component receives the following props:
-  - `onClose(result)`: Call this function to close the modal and resolve the promise with a result.
-  - `data`: Optional. Any data passed from the `showModal` call.
-
-## Advanced Usage
-
-### Handling Multiple Modals
-
-The AsyncModalProvider can handle multiple modals across different components. Each modal will wait for the previous one to resolve before being displayed.
-
-### Custom Dismiss Behavior
-
-You can make modals undismissible by setting dismissible to false. This prevents the modal from closing unless the user interacts with it.
-
-```tsx
-const result = await showModal({
-  modal: MyModal,
-  data: { message: "You must confirm this action" },
-  dismissible: false // Modal cannot be dismissed without action
-});
+```bash
+bun add @paratco/async-modal
 ```
 
-### Passing Complex Data
+---
 
-You can pass any type of data to your modal. This can be useful for passing context, form data, or other inputs that need to be shown or processed inside the modal.
+## Basic Modal Type
+
+All modal systems use the same modal component contract.
 
 ```tsx
-const result = await showModal({
-  modal: UserConfirmationModal,
-  data: { userId: 42, username: "JohnDoe" }
-});
+type AsyncModalProps<Response, Data> = {
+  isVisible: boolean;
+  dismissible: boolean;
+  data?: Data;
+  onClose: (result?: Response) => void;
+};
 ```
 
-## Example With MUI Library
+---
 
-MyModal Component:
+# Create a Modal
 
 ```tsx
-import { faXmark } from "@fortawesome/pro-duotone-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Modal, Box, Stack, Typography, IconButton, Divider } from "@mui/material";
+import type { AsyncModalProps } from "@paratco/async-modal";
 import type { ReactElement } from "react";
-import { AsyncModalProps, AsyncModalPropsBase } from "@paratco/async-modal";
 
-interface Data extends AsyncModalPropsBase {
-  readonly ban: string | null;
+export interface DataProps {
+  value: string;
 }
 
-export default function MyModal({ onClose, dismissible, data }: AsyncModalProps<boolean, Data>): ReactElement {
-  function handleClose(): void {
+export default function MyModal({ dismissible, isVisible, onClose, data }:
+AsyncModalProps<boolean, DataProps>): ReactElement {
+  const handleClose = (): void => {
     if (dismissible) {
-      onClose();
+      onClose(false);
     }
-  }
+  };
+
+  const handleConfirm = (): void => {
+    onClose(false);
+  };
 
   return (
-    <Modal
-      open={true}
-      onClose={() => {
+    <div 
+      style={{
+        width: "100%",
+        height: "100%",
+        position: "fixed",
+        left: 0,
+        top: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        padding: "12px",
+        zIndex: 10,
+        ...(isVisible === true ? {
+          visibility: "visible",
+          opacity: 1
+        } : {
+          visibility: "hidden",
+          opacity: 0
+        })
+      }}
+      onClick={() => {
         handleClose();
       }}
     >
-      <Box>
-        <Stack direction="row" justifyContent="space-between" pb={2}>
-          <Typography component="h2">Reason:</Typography>
+      <div 
+        style={{
+          borderRadius: "12px",
+          padding: "20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          backgroundColor: "white"
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
+        <p>
+          This is Container Modal
+          {
+            data?.value
+          }
+        </p>
 
-          <Stack alignItems="end">
-            <IconButton
-              size="small"
-              onClick={() => {
-                handleClose();
-              }}
-            >
-              <FontAwesomeIcon icon={faXmark} />
-            </IconButton>
-          </Stack>
-        </Stack>
-
-        <Divider />
-
-        <Typography sx={{ mt: 2 }}>{data?.ban}</Typography>
-      </Box>
-    </Modal>
+        <button
+          type="button" 
+          onClick={() => {
+            onClose(false);
+          }}
+        >
+          <p>
+            Cancel
+          </p>
+        </button>
+        <button type="button" onClick={handleConfirm}>
+          <p>
+            Confirm
+          </p>
+        </button>
+      </div>
+    </div>
   );
 }
 ```
 
-BaseComponent:
+# 1. Usage Container modal
+
+A global modal architecture using `ModalContainer`.
+
+Best for:
+
+- App-wide dialogs
+- Global confirms
+- Notification modals
+
+## Setup
+Render `ModalContainer` once in your application.
 
 ```tsx
-  import { useAsyncModal } from "@paratco/async-modal";
-  import MyModal from './components/MyModal';
+import { ModalContainer } from "@paratco/async-modal";
 
-  export default ExampleComponent () {
-    const { showModal } = useAsyncModal();
+function MyComponent() {
+  return (
+    <>
+      <ModalContainer />
+    </>
+  );
+}
+```
 
-   const handleOpenReasonModal = (): void => {
-    void showModal({ modal: MyModal, dismissible: true, data: { ban } });
+## Open Modal
+
+```tsx
+import { modal } from "@paratco/async-modal";
+import { ConfirmModal } from "./ConfirmModal";
+
+function MyComponent() {
+  const showMyModal = async (): Promise<void> => {
+    const result = await modal.add(
+      MyModal
+    , {
+      data: {
+        value: "this value is data this modal"
+      },
+      dismissible: true
+    });
+
+    console.log(`Container Modal result: ${result}`);
   };
 
-    return (
-     <Stack alignItems="center" direction="row" gap={1}>
-        <FontAwesomeIcon icon={faCommentExclamation} />
-        <Typography component={Button} p={0} variant="body2" fontWeight="bold" onClick={handleOpenReasonModal}>
-          {t("students.whyBan")}
-        </Typography>
-      </Stack>
+  return (
+    <>
+      <ModalContainer />
+
+      <Button
+        variant="text"
+        onClick={() => {
+          void showMyModal();
+        }}
+      >
+        Show Modal Container
+      </Button>
+    </>
+  );
+}
+```
+
+## With Animation Delay
+
+```tsx
+await modal.add(
+  MyModal, 
+  {
+    outDelay: 300 //ms
+  }
+);
+```
+
+---
+
+# 2. Usage Provider Modal
+
+A provider-driven modal architecture using React Context.
+
+Best for:
+
+- Feature-scoped modals
+- Modular applications
+- Context-driven apps
+
+## Setup
+
+```tsx
+import { ModalProvider } from "@paratco/async-modal";
+
+function App() {
+  return (
+    <ModalProvider>
+      <HomePage />
+    </ModalProvider>
+  );
+}
+```
+
+## Open Modal
+
+```tsx
+import { useProviderModal } from "@paratco/async-modal";
+import { ConfirmModal } from "./ConfirmModal";
+
+function App() {
+  const { show } = useProviderModal();
+
+  const showMyModal = async (): Promise<void> => {
+    const result = await show(
+      MyModal
+      , {
+        dismissible: true
+      }
     );
+
+    console.log(`Provider Modal result: ${result}`);
   };
+
+  return(
+    <button
+      type="button"
+      onClick={() => {
+        void showMyModal();
+      }}
+    >
+      Show Provider Modal
+    </button>
+  );
+}
+```
+
+## Default Provider Options
+
+```tsx
+<ModalProvider
+  dismissible={false}
+  outDelay={500}
+>
+  <App />
+</ModalProvider>
+```
+
+These values become default options for all modals inside the provider.
+
+---
+
+# 3. Usage Imperative Modal
+
+A ref-based modal architecture.
+
+Best for:
+
+- Local component workflows
+- Independent modal instances
+- Ref-based APIs
+
+## Setup
+
+```tsx
+import { useRef } from "react";
+import type { ReactElement } from "react";
+import { Button } from "@mui/material";
+import { ImperativeModal } from "@paratco/async-modal";
+import type { ImperativeModalRef } from "@paratco/async-modal";
+import MyModal from "./components/MyModal";
+
+function App(): ReactElement {
+  const ref = useRef<ImperativeModalRef<typeof MyModal>>(null);
+
+  return (
+    <React.Fragment>
+      <ImperativeModal
+        Modal={MyModal}
+        ref={ref}
+        dismissible={true}
+      />
+
+      <Button
+        variant="contained"
+        onClick={() => {
+          void showModal();
+        }}
+      >
+        Show Modal
+      </Button>
+    </React.Fragment>
+  );
+}
+
+export default App;
+```
+
+## Open Modal
+
+```tsx
+const showModal = async (): Promise<void> => {
+  const result = await ref.current?.api.show();
+
+  console.log(`Imperative Modal result: ${result}`);
+};
+```
+
+## Full Imperative Example
+
+```tsx
+import { useRef } from "react";
+import type { ReactElement } from "react";
+import { Button } from "@mui/material";
+import { ImperativeModal } from "@paratco/async-modal";
+import type { ImperativeModalRef } from "@paratco/async-modal";
+import MyModal from "./components/MyModal";
+
+function App(): ReactElement {
+  const ref = useRef<ImperativeModalRef<typeof MyModal>>(null);
+
+  const showModal = async (): Promise<void> => {
+    const result = await ref.current?.api.show();
+
+    console.log(`Imperative Modal result: ${result}`);
+  };
+
+  return (
+    <React.Fragment>
+      <ImperativeModal
+        Modal={MyModal}
+        ref={ref}
+        dismissible={true}
+      />
+
+      <Button
+        variant="contained"
+        onClick={() => {
+          void showModal();
+        }}
+      >
+        Show Modal
+      </Button>
+    </React.Fragment>
+  );
+}
+
+export default App;
+```
+
+---
+
+# Modal Options
+
+All modal systems support the same options.
+
+| Option | Type | Description |
+|---|---|---|
+| `dismissible` | `boolean` | Allow dismiss modal |
+| `outDelay` | `number` | Delay before unmount |
+| `data` | `unknown` | Modal input data |
+
+---
+
+# Animation Support
+
+Use `outDelay` for exit animations.
+
+```tsx
+await modal.add(ConfirmModal, {
+  outDelay: 300
+});
+```
+
+Inside modal:
+
+```tsx
+<div className={isVisible ? "fade-in" : "fade-out"}>
+  Modal Content
+</div>
+```
+
+
+Example CSS:
+
+```css
+.fade-in {
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+.fade-out {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+```
+
+# How It Works
+
+## modal.add()
+
+
+- Modal is stored globally
+- `ModalContainer` subscribes to updates
+- Modal renders dynamically
+- `onClose()` resolves Promise
+- Modal is removed automatically
+
+---
+
+## ModalProvider
+
+### Custom Dismiss Behavior
+
+- `show()` updates provider state
+- Provider renders modal dynamically
+- Modal resolves Promise on close
+- Provider removes modal automatically
+
+---
+
+
+## ImperativeModal
+
+- `show()` sets modal visible
+- Internal Promise is created
+- Modal resolves Promise on close
+- Visibility resets automatically
+
+---
+
+# Architecture Comparison
+
+| Feature | `modal.add()` | `ModalProvider` | `ImperativeModal` |
+|---|---|---|---|
+| Global state | ✅ | ❌ | ❌ |
+| Context-based | ❌ | ✅ | ❌ |
+| Ref-based | ❌ | ❌ | ✅ |
+| Scoped modals | ❌ | ✅ | ✅ |
+| Requires Provider | ❌ | ✅ | ❌ |
+| Requires Container | ✅ | ❌ | ❌ |
+| Best for app-wide dialogs | ✅ | ✅ | ❌ |
+| Best for feature modules | ❌ | ✅ | ✅ |
+
+---
+
+# Best Practices
+
+- Keep modal components reusable
+- Use typed modal responses
+- Use `outDelay` for animations
+- Prefer `ModalProvider` for feature modules
+- Prefer `modal.add()` for global confirms
+- Prefer `ImperativeModal` for local workflows
+- Keep modal UI separated from business logic
+
+---
+
+# Example With MUI
+
+```tsx
+import {
+  Dialog,
+  DialogTitle,
+  DialogActions,
+  Button
+} from "@mui/material";
+
+import type {
+  AsyncModalProps
+} from "@paratco/async-modal";
+
+type Response = boolean;
+
+type Data = {
+  title: string;
+};
+
+export function MuiConfirmModal(
+  props: AsyncModalProps<Response, Data>
+) {
+  const {
+    isVisible,
+    data,
+    onClose
+  } = props;
+
+  return (
+    <Dialog
+      open={isVisible}
+      onClose={() => {
+        onClose(false);
+      }}
+    >
+      <DialogTitle>
+        {data?.title}
+      </DialogTitle>
+
+      <DialogActions>
+        <Button
+          onClick={() => {
+            onClose(false);
+          }}
+        >
+          Cancel
+        </Button>
+
+        <Button
+          onClick={() => {
+            onClose(true);
+          }}
+        >
+          Confirm
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
 ```
